@@ -1,0 +1,7 @@
+yt-dlp
+moviepy
+faster-whisper
+srt
+ffmpeg-python
+ollama
+openai
