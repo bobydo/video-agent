@@ -27,13 +27,68 @@ def create_subtitles(video_path, zh_text):
     with open(srt_path, "w", encoding="utf-8") as f:
         f.write(srt_text)
     
-    # Copy video to output folder with Chinese subtitle suffix
+    # Create video with embedded Chinese subtitles
     output_filename = filename.replace(".mp4", "_with_zh_subtitles.mp4")
     output_video_path = os.path.join(output_dir, output_filename)
     
-    # Load video and copy to output folder
+    # Load video
     video = VideoFileClip(video_path)
-    video.write_videofile(output_video_path, codec="libx264", audio_codec="aac")
+    video_duration = video.duration
+    
+    # Create text clips for Chinese subtitles
+    text_clips = []
+    print(f"Creating {len(subtitles)} subtitle clips...")
+    
+    for i, subtitle in enumerate(subtitles):
+        content = subtitle.content.strip()
+        if content and len(content) > 0:  # Only create clips for non-empty content
+            start_time = subtitle.start.total_seconds()
+            end_time = subtitle.end.total_seconds()
+            
+            print(f"Subtitle {i+1}: '{content[:50]}...' ({start_time:.1f}s - {end_time:.1f}s)")
+            
+            # Don't go beyond video duration
+            if start_time >= video_duration:
+                break
+            if end_time > video_duration:
+                end_time = video_duration
+            
+            duration = end_time - start_time
+            if duration <= 0:
+                continue
+                
+            try:
+                # Create text clip with Chinese text - simplified approach
+                txt_clip = TextClip(
+                    text=content,
+                    font_size=40,
+                    color='white',
+                    stroke_color='black',
+                    stroke_width=3
+                )
+                
+                # Set timing and position
+                txt_clip = txt_clip.with_duration(duration).with_start(start_time)
+                txt_clip = txt_clip.with_position(('center', 'bottom'))
+                
+                text_clips.append(txt_clip)
+                print(f"  ✅ Created text clip for subtitle {i+1}")
+                
+            except Exception as e:
+                print(f"  ❌ Error creating subtitle {i+1}: {e}")
+                continue
+    
+    # Composite video with Chinese text overlays
+    if text_clips:
+        final_video = CompositeVideoClip([video] + text_clips)
+    else:
+        final_video = video
+    
+    # Write the final video with embedded Chinese subtitles
+    final_video.write_videofile(output_video_path, codec="libx264", audio_codec="aac")
+    
+    # Clean up
+    final_video.close()
     video.close()
     
     print(f"✅ Video exported to: {output_video_path}")

@@ -4,6 +4,21 @@ from moviepy import VideoFileClip
 
 def download_video(url, out_dir="downloads"):
     os.makedirs(out_dir, exist_ok=True)
+    # Try to get the video title first (without downloading)
+    with yt_dlp.YoutubeDL({"quiet": True}) as ydl:
+        info = ydl.extract_info(url, download=False)
+        video_title = info.get('title', None)
+        video_ext = info.get('ext', 'mp4')
+        if video_title:
+            # Check if file already exists
+            import glob
+            pattern = os.path.join(out_dir, f"{video_title}.*")
+            files = glob.glob(pattern)
+            for f in files:
+                if f.lower().endswith(f".{video_ext}"):
+                    print(f"✅ Video already downloaded: {f}")
+                    return f
+    # If not found, download
     ydl_opts = {"outtmpl": f"{out_dir}/%(title)s.%(ext)s"}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)

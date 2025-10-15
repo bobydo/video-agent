@@ -5,3 +5,4 @@ srt
 ffmpeg-python
 ollama
 openai
+requests
