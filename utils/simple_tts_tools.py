@@ -8,6 +8,10 @@ import srt
 from moviepy import VideoFileClip, AudioFileClip
 from typing import Optional
 
+# Create temp directory if it doesn't exist
+TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
+os.makedirs(TEMP_DIR, exist_ok=True)
+
 def create_simple_chinese_audio(srt_file_path: str, output_audio_path: str) -> Optional[str]:
     """
     Create Chinese audio from SRT subtitles using gTTS
@@ -39,7 +43,7 @@ def create_simple_chinese_audio(srt_file_path: str, output_audio_path: str) -> O
         tts = gTTS(text=chinese_text, lang='zh', slow=False)
         
         # Save to temporary MP3 file
-        temp_mp3_path = output_audio_path.replace('.wav', '_temp.mp3')
+        temp_mp3_path = os.path.join(TEMP_DIR, f"tts_temp_1_{os.getpid()}.mp3")
         tts.save(temp_mp3_path)
         
         # Convert MP3 to WAV using MoviePy
@@ -69,7 +73,7 @@ def create_chinese_audio_from_text(chinese_text: str, output_audio_path: str) ->
         tts = gTTS(text=chinese_text, lang='zh', slow=False)
         
         # Save to temporary MP3 file
-        temp_mp3_path = output_audio_path.replace('.wav', '_temp.mp3')
+        temp_mp3_path = os.path.join(TEMP_DIR, f"tts_temp_2_{os.getpid()}.mp3")
         tts.save(temp_mp3_path)
         
         # Convert MP3 to WAV using MoviePy
@@ -105,7 +109,7 @@ def create_dynamic_chinese_speaking_video(video_path: str, output_path: str) -> 
             return None
         
         # Extract audio for transcription
-        temp_audio_path = "temp_full_audio.wav"
+        temp_audio_path = os.path.join(TEMP_DIR, f"full_audio_{os.getpid()}.wav")
         video.audio.write_audiofile(temp_audio_path)
         print(f"✅ Audio extracted: {temp_audio_path}")
         

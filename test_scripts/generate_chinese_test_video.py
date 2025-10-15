@@ -59,7 +59,9 @@ def create_proper_chinese_translation_test():
         audio_clip_5sec = video.audio
     
     # Save 5-second audio for transcription
-    temp_audio_path = "temp_5sec_audio.wav"
+    temp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_audio_path = os.path.join(temp_dir, f"5sec_audio_{os.getpid()}.wav")
     audio_clip_5sec.write_audiofile(temp_audio_path)
     
     print(f"✅ Extracted {audio_clip_5sec.duration:.2f}s audio: {temp_audio_path}")
