@@ -1,10 +1,8 @@
 """
-Simple Chinese TTS using gTTS and basic audio concatenation
+Chinese TTS tools using gTTS and dynamic audio processing
 """
 import os
-import tempfile
 from gtts import gTTS
-import srt
 from moviepy import VideoFileClip, AudioFileClip
 from typing import Optional
 
@@ -12,55 +10,6 @@ from typing import Optional
 TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-def create_simple_chinese_audio(srt_file_path: str, output_audio_path: str) -> Optional[str]:
-    """
-    Create Chinese audio from SRT subtitles using gTTS
-    """
-    print(f"🎵 Creating Chinese audio from subtitles...")
-    
-    try:
-        # Read SRT file
-        with open(srt_file_path, 'r', encoding='utf-8') as f:
-            subtitle_content = f.read()
-        
-        # Parse SRT content
-        subtitles = list(srt.parse(subtitle_content))
-        
-        if not subtitles:
-            print("❌ No subtitles found in SRT file")
-            return None
-        
-        # Combine all Chinese text
-        chinese_text = " ".join([sub.content.strip() for sub in subtitles if sub.content.strip()])
-        
-        if not chinese_text:
-            print("❌ No Chinese text found in subtitles")
-            return None
-        
-        print(f"📝 Generating TTS for Chinese text: {chinese_text[:100]}...")
-        
-        # Generate TTS for the combined text
-        tts = gTTS(text=chinese_text, lang='zh', slow=False)
-        
-        # Save to temporary MP3 file
-        temp_mp3_path = os.path.join(TEMP_DIR, f"tts_temp_1_{os.getpid()}.mp3")
-        tts.save(temp_mp3_path)
-        
-        # Convert MP3 to WAV using MoviePy
-        audio_clip = AudioFileClip(temp_mp3_path)
-        audio_clip.write_audiofile(output_audio_path)
-        audio_clip.close()
-        
-        # Clean up temp MP3
-        if os.path.exists(temp_mp3_path):
-            os.unlink(temp_mp3_path)
-        
-        print(f"✅ Chinese audio generated: {output_audio_path}")
-        return output_audio_path
-        
-    except Exception as e:
-        print(f"❌ Error creating Chinese audio: {e}")
-        return None
 
 def create_chinese_audio_from_text(chinese_text: str, output_audio_path: str) -> Optional[str]:
     """

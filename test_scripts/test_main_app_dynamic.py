@@ -15,7 +15,7 @@ def test_main_app_with_dynamic_pipeline():
     
     try:
         sys.path.append('..')
-        from utils.simple_tts_tools import create_dynamic_chinese_speaking_video
+        from utils.tts_tools import create_dynamic_chinese_speaking_video
         
         # Find video file
         downloads_dir = "../downloads"

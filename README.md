@@ -1,13 +1,13 @@
 # 🎬 AI Video Caption Agent
 
-Automatically cuts YouTube videos, transcribes them, translates to Chinese, and adds subtitles — locally.
+Automatically download YouTube videos, transcribes them, translates to Chinese, and generate video with Chinese speaking
 
 ## 🧠 Features
 - Download any YouTube video
-- Split into 1-minute clips
+- Split into certain-minutes clips if needed 
 - Transcribe with Whisper
 - Translate via Llama 3 (Ollama)
-- Output Chinese subtitles
+- Generate Chinese speaking video
 
 ## ⚙️ Setup
 ```bash
@@ -21,9 +21,16 @@ Make sure **Ollama** is installed and Llama 3 is pulled:
 ollama pull llama3
 ```
 
-## ▶️ Run
+## ▶️ Run Options
+
+### 🎵 With URL (download and process)
 ```bash
 python ai_video_agent.py --url "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
-Result clips and subtitles appear under `output/`.
+### 🎵 Without URL (process existing videos)
+```bash
+python ai_video_agent.py
+```
+
+Both options automatically generate Chinese subtitles AND Chinese speaking audio. Result clips appear under `output/`.

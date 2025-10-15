@@ -4,12 +4,11 @@ from utils.video_tools import download_video
 from utils.whisper_tools import transcribe_audio
 from utils.translate_tools import translate_text
 from utils.subtitle_tools import create_subtitles
-from utils.simple_tts_tools import create_dynamic_chinese_speaking_video
+from utils.tts_tools import create_dynamic_chinese_speaking_video
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default="https://www.youtube.com/shorts/4YIzEHkrbJM", help="YouTube video URL")
-    parser.add_argument("--enhanced-tts", action="store_true", help="Generate Chinese TTS with enhanced audio-visual synchronization")
     args = parser.parse_args()
 
     print("📥 Downloading video...")
@@ -40,18 +39,17 @@ def main():
     print("📝 Creating subtitles...")
     srt_path = create_subtitles(video_path, zh_text)
     
-    # Generate Chinese speaking video if requested
-    if args.enhanced_tts:
-        print("🎵 Generating Chinese TTS with MoviePy (Python 3.13 compatible)...")
-        chinese_video_name = f"{video_title}_chinese_speaking.mp4"
-        chinese_video_path = os.path.join(output_dir, chinese_video_name)
-        
-        speaking_video = create_dynamic_chinese_speaking_video(video_path, chinese_video_path)
-        
-        if speaking_video:
-            print(f"✅ Chinese speaking video created: {speaking_video}")
-        else:
-            print("❌ Failed to create Chinese speaking video")
+    # Always generate Chinese speaking video with enhanced TTS
+    print("🎵 Generating Chinese TTS with MoviePy (Python 3.13 compatible)...")
+    chinese_video_name = f"{video_title}_chinese_speaking.mp4"
+    chinese_video_path = os.path.join(output_dir, chinese_video_name)
+    
+    speaking_video = create_dynamic_chinese_speaking_video(video_path, chinese_video_path)
+    
+    if speaking_video:
+        print(f"✅ Chinese speaking video created: {speaking_video}")
+    else:
+        print("❌ Failed to create Chinese speaking video")
 
     print("\n✅ Done! Check the 'output/' folder for the video with Chinese subtitles and text file.")
 if __name__ == "__main__":
