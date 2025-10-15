@@ -7,7 +7,16 @@ def download_video(url, out_dir="downloads"):
     ydl_opts = {"outtmpl": f"{out_dir}/%(title)s.%(ext)s"}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
-        return os.path.join(out_dir, f"{info['title']}.{info['ext']}")
+        # Find the actual downloaded file instead of relying on title
+        import glob
+        pattern = os.path.join(out_dir, "*.mp4")
+        files = glob.glob(pattern)
+        if files:
+            # Return the most recently modified file
+            return max(files, key=os.path.getmtime)
+        else:
+            # Fallback to original method
+            return os.path.join(out_dir, f"{info['title']}.{info['ext']}")
 
 def split_video(video_path, out_dir="output", clip_length=60):
     os.makedirs(out_dir, exist_ok=True)
