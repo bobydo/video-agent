@@ -94,4 +94,4 @@ def create_subtitles(video_path, zh_text):
     print(f"✅ Video exported to: {output_video_path}")
     print(f"✅ Subtitles saved to: {srt_path}")
     
-    return output_video_path
+    return srt_path
