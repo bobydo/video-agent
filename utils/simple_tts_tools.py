@@ -154,9 +154,22 @@ def create_dynamic_chinese_speaking_video(video_path: str, output_path: str) -> 
         chinese_audio_clip = AudioFileClip(chinese_audio_path)
         
         # Adjust audio duration to match video
-        if chinese_audio_clip.duration > video_clip.duration:
+        print(f"🎬 Video duration: {video_clip.duration:.2f}s, Audio duration: {chinese_audio_clip.duration:.2f}s")
+        
+        # If Chinese audio is shorter, pad with silence
+        if chinese_audio_clip.duration < video_clip.duration:
+            from moviepy.audio.AudioClip import CompositeAudioClip
+            from moviepy.audio.AudioClip import AudioClip
+            
+            # Create silence for the remaining duration
+            silence_duration = video_clip.duration - chinese_audio_clip.duration
+            silence = AudioClip(lambda t: 0, duration=silence_duration)
+            
+            # Concatenate Chinese audio with silence
+            chinese_audio_clip = CompositeAudioClip([chinese_audio_clip, silence.with_start(chinese_audio_clip.duration)])
             chinese_audio_clip = chinese_audio_clip.with_duration(video_clip.duration)
-        elif chinese_audio_clip.duration < video_clip.duration:
+        elif chinese_audio_clip.duration > video_clip.duration:
+            # If longer, trim to video duration
             chinese_audio_clip = chinese_audio_clip.with_duration(video_clip.duration)
         
         # Create new video with Chinese audio
