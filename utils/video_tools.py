@@ -1,6 +1,6 @@
 import os
 import yt_dlp
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 
 def download_video(url, out_dir="downloads"):
     os.makedirs(out_dir, exist_ok=True)
@@ -16,8 +16,8 @@ def split_video(video_path, out_dir="output", clip_length=60):
     parts = []
     for start in range(0, duration, clip_length):
         end = min(start + clip_length, duration)
-        subclip = clip.subclip(start, end)
+        subclip = clip.subclipped(start, end)
         out_path = os.path.join(out_dir, f"clip_{start//clip_length + 1}.mp4")
-        subclip.write_videofile(out_path, codec="libx264", audio_codec="aac", verbose=False, logger=None)
+        subclip.write_videofile(out_path, codec="libx264", audio_codec="aac")
         parts.append(out_path)
     return parts

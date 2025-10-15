@@ -1,6 +1,6 @@
 import srt
 import datetime
-from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
+from moviepy import VideoFileClip, TextClip, CompositeVideoClip
 
 def create_subtitles(video_path, zh_text):
     lines = zh_text.split("。")
