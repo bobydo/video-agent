@@ -1,10 +1,16 @@
-# Test Scripts for Chinese TTS Video Generation
+# Test Scripts for Video Agent System
 
-This folder contains test scripts to verify Chinese text-to-speech functionality.
+This folder contains comprehensive test scripts for the video agent system including subtitle verification and TTS testing.
 
-## Files:
+## Test Categories:
 
-### `generate_chinese_test_video.py`
+### Subtitle System Tests
+- `subtitle_test.py` - **Main subtitle test** - comprehensive subtitle system testing (all-in-one)
+- `simple_verifier.py` - Quick subtitle verification and analysis
+
+### TTS System Tests  
+- `test_tone_differences.py` - Tests different TTS tone variations
+- `generate_chinese_test_video.py`
 - **Purpose:** Generate a 5-second test video with proper Chinese translation
 - **Output:** `5sec_proper_chinese.mp4` 
 - **Features:**

@@ -14,7 +14,7 @@ def translate_text(text):
                  f"Only return the Chinese translation, nothing else:\n\n{text}"
         
         payload = {
-            "model": "llama3",
+            "model": "llama3.1:8b",  # Updated to use available model
             "prompt": prompt,
             "stream": False,
             "options": {
