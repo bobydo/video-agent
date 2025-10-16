@@ -10,7 +10,8 @@ def translate_text(text):
         if len(text) > 2000:
             text = text[:2000] + "..."
             
-        prompt = f"Please translate the following English text to Simplified Chinese. Only return the Chinese translation, nothing else:\n\n{text}"
+        prompt = f"Please translate the following English text to Simplified Chinese. " \
+                 f"Only return the Chinese translation, nothing else:\n\n{text}"
         
         payload = {
             "model": "llama3",

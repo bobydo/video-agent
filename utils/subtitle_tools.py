@@ -58,25 +58,40 @@ def create_subtitles(video_path, zh_text):
                 continue
                 
             try:
-                # Create text clip with Chinese text - simplified approach
+                # Create text clip with Chinese text - enhanced for visibility
                 txt_clip = TextClip(
                     text=content,
-                    font_size=40,
-                    color='white',
-                    stroke_color='black',
-                    stroke_width=3
+                    font_size=48,           # Larger font size
+                    color='yellow',         # More visible color
+                    stroke_color='black',   # Black outline
+                    stroke_width=4,         # Thicker outline
+                    font='Arial-Unicode-MS' # Better Unicode support
                 )
                 
-                # Set timing and position
+                # Set timing and position - moved up from bottom for better visibility
                 txt_clip = txt_clip.with_duration(duration).with_start(start_time)
-                txt_clip = txt_clip.with_position(('center', 'bottom'))
+                txt_clip = txt_clip.with_position(('center', 0.85))  # 85% from top (higher than bottom)
                 
                 text_clips.append(txt_clip)
-                print(f"  ✅ Created text clip for subtitle {i+1}")
+                print(f"  ✅ Created text clip for subtitle {i+1}: '{content}'")
                 
             except Exception as e:
                 print(f"  ❌ Error creating subtitle {i+1}: {e}")
-                continue
+                # Try fallback without font specification
+                try:
+                    txt_clip = TextClip(
+                        text=content,
+                        font_size=48,
+                        color='yellow',
+                        stroke_color='black',
+                        stroke_width=4
+                    ).with_duration(duration).with_start(start_time).with_position(('center', 0.85))
+                    
+                    text_clips.append(txt_clip)
+                    print(f"  ✅ Fallback text clip created for subtitle {i+1}")
+                except Exception as e2:
+                    print(f"  ❌ Fallback also failed for subtitle {i+1}: {e2}")
+                    continue
     
     # Composite video with Chinese text overlays
     if text_clips:
