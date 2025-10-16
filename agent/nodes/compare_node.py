@@ -19,7 +19,7 @@ class CompareNode(BaseNode):
         print(f"📊 NODE: Compare with Target")
         print(f"{'='*60}")
         
-        if not state.target_metrics or not state.current_metrics['text_detected']:
+        if not state.target_metrics or not state.current_metrics or not state.current_metrics['text_detected']:
             state.comparison_result = self._empty_comparison()
             return state
         
