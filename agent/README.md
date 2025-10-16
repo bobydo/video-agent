@@ -35,7 +35,7 @@ This AI agent uses a **graph-based architecture** with:
           │
     ┌─────┴─────────────────────────┐
     │                               │
- Score ≥ 95?                 Iteration ≥ 7?
+ Score ≥ 95?                 Iteration ≥ 7? or snapshot has no Chinese
     │ YES                           │ YES
     ↓                               ↓
 [STOP: Success]              [STOP: Max Iterations]

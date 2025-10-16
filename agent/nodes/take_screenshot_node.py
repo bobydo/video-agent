@@ -27,6 +27,9 @@ class TakeScreenshotNode(BaseNode):
         screenshot_time = min(5.0, video.duration / 2)
         frame = video.get_frame(screenshot_time)
         
+        if frame is None:
+            raise ValueError("Failed to capture frame from video")
+        
         # Save screenshot
         screenshot_path = self.screenshots_dir / f"iteration_{state.iteration}_screenshot.png"
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)

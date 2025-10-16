@@ -62,7 +62,7 @@ def compare_fonts():
         return
     
     try:
-        from subtitle_test import take_screenshots, analyze_screenshots
+        from test_scripts.agent.subtitle_test import take_screenshots, analyze_screenshots
         
         # Take screenshots at multiple times
         screenshots = take_screenshots(video_path, times=[1, 3, 5, 7, 9])
