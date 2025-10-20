@@ -1,10 +1,11 @@
 """
-Chinese TTS tools using gTTS and dynamic audio processing
+Chinese TTS tools using gTTS and dynamic audio processing with precise duration control
 """
 import os
 import numpy as np
 from gtts import gTTS
 from moviepy import VideoFileClip, AudioFileClip, AudioArrayClip
+from scipy import signal
 from typing import Optional
 
 # Create temp directory if it doesn't exist
@@ -93,6 +94,105 @@ def get_tts_settings(tone_style: str = 'default'):
     return profile
 
 
+def loop_audio_to_duration(audio_path: str, target_duration: float, output_path: str) -> Optional[str]:
+    """
+    Loop/repeat audio to match target duration with natural pauses
+    This avoids audio quality degradation from extreme time-stretching
+    
+    Args:
+        audio_path: Path to input audio file
+        target_duration: Target duration in seconds
+        output_path: Path for output audio file
+    
+    Returns:
+        Path to looped audio file, or None if failed
+    """
+    try:
+        print(f"🔁 Looping audio from {audio_path} to fill {target_duration:.2f}s...")
+        
+        # Load audio with MoviePy
+        audio_clip = AudioFileClip(audio_path)
+        current_duration = audio_clip.duration
+        
+        print(f"📊 Original audio duration: {current_duration:.2f}s, Target: {target_duration:.2f}s")
+        
+        # If audio is already longer than target, just trim it
+        if current_duration >= target_duration:
+            print(f"✂️  Audio is longer than target, trimming to {target_duration:.2f}s")
+            final_clip = audio_clip.subclipped(0, target_duration)
+            final_clip.write_audiofile(output_path)
+            audio_clip.close()
+            final_clip.close()
+            return output_path
+        
+        # Calculate how many loops we need
+        num_loops = int(np.ceil(target_duration / current_duration))
+        pause_duration = 1.0  # 1 second pause between loops
+        
+        print(f"🔄 Will loop audio {num_loops} times with {pause_duration:.1f}s pauses")
+        
+        # Get audio array
+        audio_array = audio_clip.to_soundarray()
+        fps = audio_clip.fps
+        
+        # Create silence array for pauses
+        pause_samples = int(pause_duration * fps)
+        if len(audio_array.shape) == 2:
+            # Stereo
+            silence = np.zeros((pause_samples, 2))
+        else:
+            # Mono
+            silence = np.zeros((pause_samples, 1))
+        
+        # Build looped audio with pauses
+        looped_arrays = []
+        for i in range(num_loops):
+            looped_arrays.append(audio_array)
+            if i < num_loops - 1:  # Don't add pause after last loop
+                looped_arrays.append(silence)
+        
+        # Concatenate all arrays
+        combined_array = np.vstack(looped_arrays)
+        
+        # Trim to exact target duration
+        target_samples = int(target_duration * fps)
+        if len(combined_array) > target_samples:
+            combined_array = combined_array[:target_samples]
+        elif len(combined_array) < target_samples:
+            # Pad with silence if needed
+            remaining_samples = target_samples - len(combined_array)
+            if len(audio_array.shape) == 2:
+                padding = np.zeros((remaining_samples, 2))
+            else:
+                padding = np.zeros((remaining_samples, 1))
+            combined_array = np.vstack([combined_array, padding])
+        
+        # Close original clip
+        audio_clip.close()
+        
+        # Create new audio clip with looped audio
+        looped_clip = AudioArrayClip(combined_array, fps=fps)
+        
+        # Export to file
+        looped_clip.write_audiofile(output_path)
+        looped_clip.close()
+        
+        # Verify final duration
+        final_clip = AudioFileClip(output_path)
+        final_duration = final_clip.duration
+        final_clip.close()
+        
+        print(f"✅ Audio looped to {final_duration:.2f}s (target: {target_duration:.2f}s, {num_loops} loops)")
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"❌ Error looping audio: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def create_chinese_audio_from_text(chinese_text: str, output_audio_path: str, tone_style: str = 'default') -> Optional[str]:
     """
     Create Chinese audio directly from text using gTTS with configurable tone settings
@@ -113,9 +213,8 @@ def create_chinese_audio_from_text(chinese_text: str, output_audio_path: str, to
         sentences = re.split(r'[。！？，；、]', chinese_text)
         sentences = [s.strip() for s in sentences if s.strip()]
         
-        # Apply tone-specific sentence limits
-        if len(sentences) > settings['max_sentences']:
-            sentences = sentences[:settings['max_sentences']]
+        # Don't truncate - use ALL sentences for full translation
+        # (The max_sentences setting was causing truncation to only first 10-15 seconds)
         
         # Rejoin with tone-specific punctuation for natural speech rhythm
         processed_text = settings['punctuation'].join(sentences)
@@ -245,31 +344,52 @@ def create_dynamic_chinese_speaking_video(video_path: str, output_path: str, ton
             print("❌ Failed to generate Chinese audio")
             return None
         
-        # Step 5: Create video with Chinese audio
+        # Step 5: Loop audio to match video duration (instead of stretching which causes noise)
         print("🎬 Combining video with Chinese audio...")
         
-        # Reload video
+        # Reload video to get precise duration
         video_clip = VideoFileClip(video_path)
-        chinese_audio_clip = AudioFileClip(chinese_audio_path)
+        video_duration = video_clip.duration
         
-        # Adjust audio duration to match video
+        # Create looped audio path
+        looped_audio_path = audio_output_path.replace('.wav', '_looped.wav')
+        
+        # Loop audio to match video duration exactly (repeats naturally instead of distorting)
+        looped_audio = loop_audio_to_duration(chinese_audio_path, video_duration, looped_audio_path)
+        
+        if not looped_audio:
+            print("⚠️  Audio looping failed, using original audio with padding/trimming")
+            chinese_audio_clip = AudioFileClip(chinese_audio_path)
+        else:
+            chinese_audio_clip = AudioFileClip(looped_audio)
+            # Clean up original audio
+            if os.path.exists(chinese_audio_path):
+                os.unlink(chinese_audio_path)
+        
+        # Step 6: Create video with looped Chinese audio
+        # Step 6: Create video with time-stretched Chinese audio
         print(f"🎬 Video duration: {video_clip.duration:.2f}s, Audio duration: {chinese_audio_clip.duration:.2f}s")
         
-        # If Chinese audio is shorter, pad with silence
-        if chinese_audio_clip.duration < video_clip.duration:
-            from moviepy.audio.AudioClip import CompositeAudioClip
-            from moviepy.audio.AudioClip import AudioClip
-            
-            # Create silence for the remaining duration
-            silence_duration = video_clip.duration - chinese_audio_clip.duration
-            silence = AudioClip(lambda t: 0, duration=silence_duration)
-            
-            # Concatenate Chinese audio with silence
-            chinese_audio_clip = CompositeAudioClip([chinese_audio_clip, silence.with_start(chinese_audio_clip.duration)])
-            chinese_audio_clip = chinese_audio_clip.with_duration(video_clip.duration)
-        elif chinese_audio_clip.duration > video_clip.duration:
-            # If longer, trim to video duration
-            chinese_audio_clip = chinese_audio_clip.with_duration(video_clip.duration)
+        # Audio should now match video duration, but apply final adjustments if needed
+        if abs(chinese_audio_clip.duration - video_clip.duration) > 0.5:
+            print(f"⚠️  Duration mismatch detected, applying final adjustment...")
+            # If Chinese audio is shorter, pad with silence
+            if chinese_audio_clip.duration < video_clip.duration:
+                from moviepy.audio.AudioClip import CompositeAudioClip
+                from moviepy.audio.AudioClip import AudioClip
+                
+                # Create silence for the remaining duration
+                silence_duration = video_clip.duration - chinese_audio_clip.duration
+                silence = AudioClip(lambda t: 0, duration=silence_duration)
+                
+                # Concatenate Chinese audio with silence
+                chinese_audio_clip = CompositeAudioClip([chinese_audio_clip, silence.with_start(chinese_audio_clip.duration)])
+                chinese_audio_clip = chinese_audio_clip.with_duration(video_clip.duration)
+            elif chinese_audio_clip.duration > video_clip.duration:
+                # If longer, trim to video duration
+                chinese_audio_clip = chinese_audio_clip.with_duration(video_clip.duration)
+        else:
+            print(f"✅ Audio duration matches video duration perfectly!")
         
         # Create new video with Chinese audio
         final_video = video_clip.with_audio(chinese_audio_clip)
@@ -283,9 +403,9 @@ def create_dynamic_chinese_speaking_video(video_path: str, output_path: str, ton
         chinese_audio_clip.close()
         final_video.close()
         
-        # Remove temporary audio file
-        if os.path.exists(chinese_audio_path):
-            os.unlink(chinese_audio_path)
+        # Remove temporary looped audio file
+        if os.path.exists(looped_audio_path):
+            os.unlink(looped_audio_path)
         
         print(f"✅ Dynamic Chinese speaking video created successfully!")
         return tone_output_path
