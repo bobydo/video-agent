@@ -17,7 +17,7 @@ Automatically download YouTube videos, transcribes them, translates to Chinese, 
 - Download any YouTube video
 - Split into certain-minutes clips if needed 
 - Transcribe with Whisper LLM (speech-to-text)
-- Translate via Llama 3 LLM (English → Chinese)
+- Translate via Local Llama 3 LLM (English → Chinese)
 - Generate Chinese speaking video with configurable TTS tones (sport, movie, nature, news, casual, default)
 
 ## ⚙️ Setup
